@@ -1,30 +1,66 @@
+-- ==========================================
+-- TABELA CLIENTE
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS cliente (
     id_cliente INTEGER GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(100) NOT NULL,
     cpf VARCHAR(14) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     telefone VARCHAR(20),
-    endereco TEXT NOT NULL,
+
     PRIMARY KEY (id_cliente)
 );
 
+
+-- ==========================================
+-- TABELA ENDERECO
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS endereco (
+    id_endereco INTEGER GENERATED ALWAYS AS IDENTITY,
+    id_cliente INTEGER NOT NULL,
+    cep VARCHAR(9) NOT NULL,
+    numero VARCHAR(10) NOT NULL,
+    complemento VARCHAR(100),
+    tipo_endereco VARCHAR(30) NOT NULL,
+
+    PRIMARY KEY (id_endereco),
+
+    CONSTRAINT fk_endereco_cliente
+        FOREIGN KEY (id_cliente)
+        REFERENCES cliente (id_cliente)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+
+-- ==========================================
+-- TABELA PRODUTO
+-- ==========================================
 
 CREATE TABLE IF NOT EXISTS produto (
     id_produto INTEGER GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(100) NOT NULL,
     descricao TEXT,
-    preco DECIMAL(10,2) NOT NULL CHECK (preco >= 0),
+    preco DECIMAL(10,2) NOT NULL
+        CHECK (preco >= 0),
     codigo_barras VARCHAR(50) UNIQUE,
+
     PRIMARY KEY (id_produto)
 );
 
 
+-- ==========================================
+-- TABELA ESTOQUE
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS estoque (
     id_estoque INTEGER GENERATED ALWAYS AS IDENTITY,
     id_produto INTEGER NOT NULL UNIQUE,
-    quantidade_disponivel INTEGER NOT NULL DEFAULT 0
-        CHECK (quantidade_disponivel >= 0),
-    data_ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    quantidade INTEGER NOT NULL DEFAULT 0
+        CHECK (quantidade >= 0),
+
     PRIMARY KEY (id_estoque),
 
     CONSTRAINT fk_estoque_produto
@@ -35,14 +71,15 @@ CREATE TABLE IF NOT EXISTS estoque (
 );
 
 
+-- ==========================================
+-- TABELA PEDIDO
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS pedido (
     id_pedido INTEGER GENERATED ALWAYS AS IDENTITY,
     id_cliente INTEGER NOT NULL,
     data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    valor_total DECIMAL(10,2) NOT NULL DEFAULT 0.00
-        CHECK (valor_total >= 0),
-
-    status_pedido VARCHAR(20) NOT NULL
+    status_pedido VARCHAR(30) NOT NULL
         CHECK (
             status_pedido IN (
                 'Aguardando Pagamento',
@@ -63,6 +100,10 @@ CREATE TABLE IF NOT EXISTS pedido (
 );
 
 
+-- ==========================================
+-- TABELA ITEM_PEDIDO
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS item_pedido (
     id_item_pedido INTEGER GENERATED ALWAYS AS IDENTITY,
     id_pedido INTEGER NOT NULL,
@@ -71,7 +112,6 @@ CREATE TABLE IF NOT EXISTS item_pedido (
         CHECK (quantidade > 0),
     preco_unitario DECIMAL(10,2) NOT NULL
         CHECK (preco_unitario >= 0),
-    valor_subtotal DECIMAL(10,2),
 
     PRIMARY KEY (id_item_pedido),
 
@@ -89,10 +129,13 @@ CREATE TABLE IF NOT EXISTS item_pedido (
 );
 
 
+-- ==========================================
+-- TABELA PAGAMENTO
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS pagamento (
     id_pagamento INTEGER GENERATED ALWAYS AS IDENTITY,
     id_pedido INTEGER NOT NULL UNIQUE,
-
     forma_pagamento VARCHAR(30) NOT NULL
         CHECK (
             forma_pagamento IN (
@@ -102,10 +145,8 @@ CREATE TABLE IF NOT EXISTS pagamento (
                 'Cartão de Débito'
             )
         ),
-
     valor_pago DECIMAL(10,2) NOT NULL
         CHECK (valor_pago > 0),
-
     status_pagamento VARCHAR(20) NOT NULL
         CHECK (
             status_pagamento IN (
@@ -115,7 +156,6 @@ CREATE TABLE IF NOT EXISTS pagamento (
                 'Estornado'
             )
         ),
-
     data_pagamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (id_pagamento),
