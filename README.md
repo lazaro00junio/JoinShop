@@ -1,15 +1,23 @@
-# Projeto Integrador — JoinShop (E-commerce)
+# Projeto Integrador — JoinShop (Loja Virtual)
 
-Repositório oficial do trabalho final da disciplina de **Banco de Dados** (2º período — Sistemas para Internet). O projeto consiste na modelagem, implementação física e manipulação de um banco de dados relacional para a loja virtual **JoinShop**.
+Repositório oficial do trabalho final da disciplina de **Banco de Dados** (2º período — Sistemas para Internet). O projeto consiste na modelagem, implementação física e manipulação de um banco de dados relacional para a loja virtual **JoinShop** (modelo E-commerce B2C com estoque próprio).
 
 ---
 
-## Semanas 1 e 2 — Levantamento de Requisitos, DER e Modelo Lógico
+## Semanas 1 e 2 — Requisitos, Modelagem Lógica e Normalização
 
-Nas etapas iniciais foram definidos os requisitos do sistema de e-commerce, as regras de negócio, o Diagrama Entidade-Relacionamento (DER) e o Modelo Lógico normalizado.
+Nas etapas iniciais foram definidos os requisitos do sistema de loja virtual, as regras de negócio, o Diagrama Entidade-Relacionamento (DER) e o Modelo Lógico normalizado.
 
-- **Documentação e Diagramas:** Consulte a pasta [`documentacao/`](documentacao/)
+- **Documentação Completa e Diagramas:** Consulte a pasta [`documentacao/`](documentacao/)
 - **Script de Criação (DDL):** [`sql/01_criacao.sql`](sql/01_criacao.sql)
+
+### Principais Regras de Negócio e Modelagem
+- **Escopo (Loja Virtual B2C):** Venda direta ao consumidor final com gestão centralizada de catálogo, estoque, pedidos e pagamentos.
+- **Cardinalidades e Resolução N:N:** Relacionamentos `1:N` entre `CLIENTE`—`ENDERECO`, `CLIENTE`—`PEDIDO`, `ENDERECO`—`PEDIDO` e `PEDIDO`—`PAGAMENTO`. O relacionamento `N:N` entre `PEDIDO` e `PRODUTO` foi resolvido pela tabela associativa **`ITEM_PEDIDO`**, que também armazena a `quantidade` e o `preco_unitario` histórico da venda.
+- **Fluxo de Aprovação e Pagamento:** Um pedido nasce com status `'Aguardando Pagamento'` e a venda só é efetivada (`'Pago'` / `'Confirmado'`) após o registro de um pagamento com `status_pagamento = 'Aprovado'`.
+- **Exclusão Lógica e Histórico:** Registros vinculados a vendas são protegidos por `ON DELETE RESTRICT`. A inativação é feita de forma lógica via atributo booleano `ativo` (`TRUE` / `FALSE`) em `cliente`, `endereco` e `produto`.
+- **Valores Calculados:** Para evitar redundância, subtotal (`quantidade * preco_unitario`) e valor total (`SUM(subtotal) + valor_frete - valor_desconto`) são calculados dinamicamente em consulta.
+- **Normalização (1FN, 2FN e 3FN):** Atributos atomizados e grupos multivalorados separados (1FN); chaves primárias simples eliminando dependências parciais (2FN); ausência de dependências transitivas e de armazenamento de colunas calculadas (3FN).
 
 ---
 
