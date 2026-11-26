@@ -71,3 +71,45 @@ Todos os testes foram executados dentro de blocos transacionais (`BEGIN` ... `RO
 - **Resultado obtido:** `ERROR: 23514: new row for relation "pedido" violates check constraint "pedido_status_pedido_check"`.
 
 ![Teste 5 - Check Status Pedido](evidencias/08_teste_check_status.png)
+
+---
+
+## Semana 4 — População de Dados, Consultas SQL e Transações
+
+Nesta etapa final, o banco de dados foi populado com uma massa de dados realista (**73 registros**) e validado por meio de **17 consultas analíticas e operacionais** (incluindo recursos avançados de CTE, View, Transações e análise de desempenho) além de testes completos de manipulação (DML) e atomicidade (`BEGIN` / `COMMIT`).
+
+- **Script de População (DML):** [`sql/02_populacao.sql`](sql/02_populacao.sql)
+- **Script de Consultas (DQL e Extras):** [`sql/03_consultas.sql`](sql/03_consultas.sql)
+- **Script de Testes e Transações:** [`sql/04_testes.sql`](sql/04_testes.sql)
+
+### 1. Carga Inicial de Dados (73 Registros)
+
+A população inicial contempla **10 clientes** (ativos e inativos), **12 endereços**, **11 produtos** (incluindo itens com estoque zerado e itens sem vendas), **12 pedidos** em todos os status do ciclo de vida, **16 itens de pedido** e **12 registros de pagamento** (incluindo retentativas de pagamento recusado antes da aprovação).
+
+![População de Dados](evidencias/09_populacao_dados.png)
+
+### 2. Consultas Obrigatórias e Avançadas
+
+Foram implementadas e executadas as **12 consultas obrigatórias** (filtros com `WHERE`, ordenação, paginação com `LIMIT`, junções com `INNER JOIN` e `LEFT JOIN`, agregações com `GROUP BY` e `HAVING`, e subconsultas) e **5 consultas extras** cobrindo recursos avançados do PostgreSQL:
+
+- **Consultas Básicas (1 a 3):** Estoque crítico, pedidos recentes em aberto e top 5 produtos mais caros (`evidencias/10` a `12`).
+- **Junções (4 a 6):** Histórico de pagamentos aprovados, detalhamento de itens vendidos por cliente e produtos nunca vendidos com `LEFT JOIN` (`evidencias/13` a `15`).
+- **Agregações (7 e 8):** Faturamento por forma de pagamento com `GROUP BY` e clientes recorrentes com `HAVING COUNT(*) > 1` (`evidencias/16` e `17`).
+- **Subconsultas (9 e 10):** Produtos acima do preço médio do catálogo e clientes sem pedidos realizados (`evidencias/18` e `19`).
+- **Consultas de Negócio e Extras (11 a 17):** Valor total por pedido, faturamento líquido no período, ranking de vendas com **CTE (`WITH`)**, criação e consulta da **View (`vw_resumo_pedidos`)**, transação com **`ROLLBACK`** e análise de plano de execução com **`EXPLAIN ANALYZE`** (`evidencias/20` a `26`).
+
+### 3. Testes de Manipulação (DML) e Transação Atômica (`BEGIN` / `COMMIT`)
+
+Para encerrar a validação, o script `04_testes.sql` executou operações controladas de `INSERT`, `UPDATE` e `DELETE` seguidas de uma **transação atômica multi-operação** que cria um novo pedido pago, insere o item vendido, realiza a baixa automática no estoque e registra o pagamento aprovado de forma indivisível:
+
+![Transação Atômica e Testes DML](evidencias/27_testes_integridade_transacao.png)
+
+---
+
+## Integrantes do Grupo
+
+- **Iara Dias**
+- **Lázaro Junio**
+- **Lívia**
+- **Oliver**
+- **Vinícius**
