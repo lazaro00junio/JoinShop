@@ -261,7 +261,7 @@ WHERE email = 'transacao@joinshop.local';
 
 ROLLBACK;
 
--- Consulta 17: EXPLAIN ANALYZE - Explique a consulta que agrupa os produtos vendidos em pedidos com pagamento aprovado e calcula as unidades vendidas e o faturamento por produto
+-- Consulta 17: EXPLAIN ANALYZE - Explica a consulta que agrupa os produtos vendidos em pedidos com pagamento aprovado e calcula as unidades vendidas e o faturamento por produto
 
 EXPLAIN ANALYZE
 SELECT
