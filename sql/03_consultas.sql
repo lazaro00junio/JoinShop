@@ -163,3 +163,119 @@ FROM pedido p
 INNER JOIN item_pedido ip ON p.id_pedido = ip.id_pedido
 WHERE p.data_pedido BETWEEN '2026-10-01 00:00:00' AND '2026-11-30 23:59:59'
   AND p.status_pedido <> 'Cancelado';
+
+-- Consulta 13: Consulta extra usando CTE (WITH), produtos vendidos em pedidos com pagamento aprovado, ordenados por unidades vendidas.
+WITH vendas_por_produto AS (
+    SELECT
+        pr.id_produto,
+        pr.nome,
+        SUM(ip.quantidade) AS unidades_vendidas,
+        SUM(ip.quantidade * ip.preco_unitario) AS faturamento
+    FROM produto pr
+    INNER JOIN item_pedido ip
+        ON ip.id_produto = pr.id_produto
+    INNER JOIN pedido p
+        ON p.id_pedido = ip.id_pedido
+    INNER JOIN pagamento pg
+        ON pg.id_pedido = p.id_pedido
+    WHERE pg.status_pagamento = 'Aprovado'
+    GROUP BY pr.id_produto, pr.nome
+)
+SELECT
+    id_produto,
+    nome,
+    unidades_vendidas,
+    faturamento
+FROM vendas_por_produto
+ORDER BY unidades_vendidas DESC, nome;
+
+-- Consulta 14: criar VIEW
+
+CREATE OR REPLACE VIEW vw_resumo_pedidos AS
+SELECT
+    p.id_pedido,
+    c.id_cliente,
+    c.nome AS cliente,
+    p.data_pedido,
+    p.status_pedido,
+    COALESCE(SUM(ip.quantidade * ip.preco_unitario), 0) AS subtotal_produtos,
+    p.valor_frete,
+    p.valor_desconto,
+    COALESCE(SUM(ip.quantidade * ip.preco_unitario), 0)
+        + p.valor_frete
+        - p.valor_desconto AS valor_total_pedido
+FROM pedido p
+INNER JOIN cliente c
+    ON c.id_cliente = p.id_cliente
+LEFT JOIN item_pedido ip
+    ON ip.id_pedido = p.id_pedido
+GROUP BY
+    p.id_pedido,
+    c.id_cliente,
+    c.nome,
+    p.data_pedido,
+    p.status_pedido,
+    p.valor_frete,
+    p.valor_desconto;
+
+
+-- Consulta 15: Consulta da view criada anteriormente
+
+SELECT *
+FROM vw_resumo_pedidos
+ORDER BY data_pedido DESC;
+
+-- Consulta 16: Transãção com mais de uma operação. Insere um cliente temporário e um endereço associado. O ROLLBACK desfaz as duas operações
+
+BEGIN;
+
+INSERT INTO cliente (nome, cpf, email)
+VALUES (
+    'Cliente temporário da transação',
+    '999.999.999-99',
+    'transacao@joinshop.local'
+)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO endereco (
+    id_cliente,
+    cep,
+    logradouro,
+    numero,
+    bairro,
+    cidade,
+    uf,
+    tipo_endereco
+)
+SELECT
+    id_cliente,
+    '00000-000',
+    'Rua de Teste',
+    '0',
+    'Centro',
+    'Uberlândia',
+    'MG',
+    'Residencial'
+FROM cliente
+WHERE email = 'transacao@joinshop.local';
+
+ROLLBACK;
+
+-- Consulta 17: EXPLAIN ANALYZE - Explique a consulta que agrupa os produtos vendidos em pedidos com pagamento aprovado e calcula as unidades vendidas e o faturamento por produto
+
+EXPLAIN ANALYZE
+SELECT
+    pr.id_produto,
+    pr.nome,
+    SUM(ip.quantidade) AS unidades_vendidas,
+    SUM(ip.quantidade * ip.preco_unitario) AS faturamento
+FROM produto pr
+INNER JOIN item_pedido ip
+    ON ip.id_produto = pr.id_produto
+INNER JOIN pedido p
+    ON p.id_pedido = ip.id_pedido
+INNER JOIN pagamento pg
+    ON pg.id_pedido = p.id_pedido
+WHERE pg.status_pagamento = 'Aprovado'
+GROUP BY pr.id_produto, pr.nome
+ORDER BY unidades_vendidas DESC;
